@@ -42,13 +42,13 @@ class Terminal:
             self.slots[i] = list()
 
     def codes_to_numbers(self, codes):
-        return dict({code: digit for digit, code in enumerate(codes)})
+        return dict({code: digit for digit, code in enumerate(codes, start=1)})
 
     def init_terminal(self):
         self.slots = dict({i: list() for i in range(self.length * self.breadth)})
         self.containers_position = dict()
         self.containers_list = dict()
-        self.create_containers_destinations_map()
+        self.map = self.create_containers_destinations_map()
 
     def get_containers_locations_map(self):
         map = np.zeros((self.length, self.breadth, self.height), dtype=np.int32)
@@ -58,16 +58,18 @@ class Terminal:
         return map.sum(axis=-1)
     
     def get_containers_destinations_map(self):
+        # assert np.array_equal(self.create_containers_destinations_map(), self.map), True
         return self.map
     
     def create_containers_destinations_map(self):
-        self.map = np.ones((self.length, self.breadth, self.height), dtype=np.float32) * -1
+        map = np.ones((self.length, self.breadth, self.height), dtype=np.float32) * -1
         for key in self.containers_list.keys():
             l, h = self.containers_position[key]
             destination = self.containers_list[key].destination
             b = int(l / self.length)
             l = l % self.length
-            self.map[l,b,h] = self.destin_classes[destination] / self.num_destinations
+            map[l,b,h] = self.destin_classes[destination] / self.num_destinations
+        return map
     
     def update_containers_destinations_map(self, position, height, dest):
         b = int(position / self.length)
@@ -132,7 +134,7 @@ class Terminal:
                 full = self.slot_is_full(slot + addon + self.length)
                 if not full:
                     return slot + addon + self.length
-            if slot + addon - self.length > 0:
+            if slot + addon - self.length > 0 and addon != self.length:
                 full = self.slot_is_full(slot + addon - self.length)
                 if not full:
                     return slot + addon - self.length
